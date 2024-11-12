@@ -1,64 +1,43 @@
 "use client";
-import { useState, useEffect } from "react";
+
 import { ethers } from "ethers";
-import Web3Modal from "web3modal";
+import { useState } from "react";
+declare global {
+  interface Window {
+    ethereum?: never;
+  }
+}
 
 export default function Home() {
-  const [currentAccount, setCurrentAccount] = useState("");
-  const [connect, setConnect] = useState(false);
-  const [balance, setBalance] = useState("");
+  const [address, setAddress] = useState<string | null>("");
+  const connectWallet = async () => {
+    let signer = null;
 
-  const failure = "Please Install the MetaMask & connect your MetaMask";
-  const Success = "Your Account Successfully Conencted to MetaMask";
+    let provider;
 
-  const INFURA_ID = process.env.NEXT_PUBLIC_INFURA_API_KEY;
-  const provider = new ethers.JsonRpcProvider(
-    `${process.env.NEXT_PUBLIC_INFURA_FETCH_KEY}`
-  );
-
-  const checkIfWalletConnected = async () => {
-    if (!window.ethereum) return;
-
-    const account = await window.ethereum.request({ method: "eth_accounts" });
-    // console.log(account);
-    if (account.length) {
-      setCurrentAccount(account[0]);
+    if (window.ethereum == null) {
+      console.log("No metamask wallet installed!");
     } else {
-      console.log("Fail");
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+
+      signer.getAddress().then((a) => setAddress(a));
     }
-    const address = "0x4838B106FCe9647Bdf1E7877BF73cE8B0BAD5f97";
-    const balance = await provider.getBalance(address);
-    const showBalance = `${ethers.formatEther(balance)} ETH`;
-    setBalance(showBalance);
-    console.log(showBalance);
   };
-
-  const cWallet = async () => {
-    if (!window.ethereum) return console.log(failure);
-
-    const accounts = await window.ethereum.request({
-      mehtod: "eth_requestAccounts",
-    });
-
-    setCurrentAccount(accounts[0]);
-    window.location.reload();
-  };
-
-  useEffect(() => {
-    checkIfWalletConnected();
-  });
 
   return (
-    <div>
-      <h1>Hello</h1>
-      {currentAccount ? (
-        <div>
-          <p>Connected Account: {currentAccount}</p>
-          <p>ETH Balance: {balance}</p>
-        </div>
-      ) : (
-        <p>{failure}</p>
-      )}
-    </div>
+    <>
+      <div>
+        <h1> Demo Metamask connection</h1>
+        <button
+          className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"
+          onClick={connectWallet}
+        >
+          {" "}
+          Connect wallet
+        </button>
+        <h2>Address : {address}</h2>
+      </div>
+    </>
   );
 }
