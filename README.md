@@ -1,5 +1,14 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## First Thing First
+1. make .env file in root directory.
+2. go to [app.infura.io](https://app.infura.io) and get api key and http key and put it in .env file as shown below
+
+```env file
+NEXT_PUBLIC_INFURA_FETCH_KEY=Your_Http_Key_Starts_with_http
+NEXT_PUBLIC_INFURA_API_KEY=Your_Api_Key
+```
+
 ## Getting Started
 
 First, run the development server:
