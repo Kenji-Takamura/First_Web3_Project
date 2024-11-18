@@ -7,9 +7,12 @@ import { useEffect, useState } from "react";
 declare global {
   interface Window {
     ethereum?: {
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-      on: (event: string, callback: (...args: any[]) => void) => void;
-      removeListener: (event: string, callback: (...args: any[]) => void) => void;
+      request: (args: {
+        method: string;
+        params?: string[] | Record<string, unknown>[]
+      }) => Promise<string[] | Record<string, unknown>>;
+      on: (event: string, callback: (params: string[] | Record<string, unknown>) => void) => void;
+      removeListener: (event: string, callback: (params: string[] | Record<string, unknown>) => void) => void;
     };
   }
 }
@@ -78,9 +81,19 @@ export default function Home() {
 
   // Effect for wallet events
   useEffect(() => {
-    const handleAccountsChanged = () => {
+    const handleAccountsChanged = (accounts: string[] | Record<string, unknown>) => {
       if (walletState.isConnected) {
-        connectWallet();
+        if (Array.isArray(accounts) && accounts.length === 0) {
+          // Disconnect case
+          setWalletState(prev => ({
+            ...prev,
+            address: null,
+            balance: null,
+            isConnected: false
+          }));
+        } else {
+          connectWallet();
+        }
       }
     };
 
@@ -95,8 +108,8 @@ export default function Home() {
       // Check if already connected
       window.ethereum
         .request({ method: "eth_accounts" })
-        .then(accounts => {
-          if (accounts.length > 0) {
+        .then((accounts) => {
+          if (Array.isArray(accounts) && accounts.length > 0) {
             connectWallet();
           }
         })
