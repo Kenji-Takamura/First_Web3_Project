@@ -121,7 +121,7 @@ export default function Home() {
         window.ethereum?.removeListener("chainChanged", handleChainChanged);
       };
     }
-  }, [walletState.isConnected]);
+  }, [walletState.isConnected, connectWallet]);
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
