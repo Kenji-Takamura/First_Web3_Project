@@ -1,7 +1,7 @@
 "use client";
 
 import { ethers } from "ethers";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
 // Proper TypeScript interface for Ethereum window object
 declare global {
@@ -37,14 +37,14 @@ export default function Home() {
   });
 
   // Error handling utility
-  const handleError = (error: unknown) => {
+  const handleError = useCallback((error: unknown) => {
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
     setWalletState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
     console.error("Wallet error:", error);
-  };
+  }, []);
 
   // Wallet connection logic
-  const updateWalletInfo = async (provider: ethers.BrowserProvider) => {
+  const updateWalletInfo = useCallback(async (provider: ethers.BrowserProvider) => {
     try {
       const signer = await provider.getSigner();
       const address = await signer.getAddress();
@@ -60,9 +60,9 @@ export default function Home() {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError]);
 
-  const connectWallet = async () => {
+  const connectWallet = useCallback(async () => {
     try {
       setWalletState(prev => ({ ...prev, isLoading: true, error: null }));
 
@@ -77,25 +77,27 @@ export default function Home() {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [updateWalletInfo, handleError]);
 
   // Effect for wallet events
   useEffect(() => {
-    const handleAccountsChanged = (accounts: string[] | Record<string, unknown>) => {
-      if (walletState.isConnected) {
-        if (Array.isArray(accounts) && accounts.length === 0) {
-          // Disconnect case
-          setWalletState(prev => ({
-            ...prev,
-            address: null,
-            balance: null,
-            isConnected: false
-          }));
-        } else {
-          connectWallet();
+    const handleAccountsChanged = useMemo(() => {
+      return (accounts: string[] | Record<string, unknown>) => {
+        if (walletState.isConnected) {
+          if (Array.isArray(accounts) && accounts.length === 0) {
+            // Disconnect case
+            setWalletState(prev => ({
+              ...prev,
+              address: null,
+              balance: null,
+              isConnected: false
+            }));
+          } else {
+            connectWallet();
+          }
         }
-      }
-    };
+      };
+    }, [walletState.isConnected, connectWallet]);
 
     const handleChainChanged = () => {
       window.location.reload();
@@ -121,7 +123,7 @@ export default function Home() {
         window.ethereum?.removeListener("chainChanged", handleChainChanged);
       };
     }
-  },[walletState.isConnected, connectWallet]);
+  }, [walletState.isConnected, connectWallet, handleError]);
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
